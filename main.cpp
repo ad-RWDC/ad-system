@@ -174,12 +174,22 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 
 				if ((dir[1] < -20 || dir[1] > 20) && start_flag) {
 					start_flag = false;
+					//log = log + to_string(kinect.skeletonTrackingId[0]) + "looking_time : " + to_string((time_from_start - start) / 1000.0) + "\n";
 					log = log + "looking_time : " + to_string((time_from_start - start) / 1000.0) + "\n";
 					sum_looking_time = sum_looking_time + ((time_from_start - start) / 1000.0);
 				}
 
 				if ((dir[1] < -20 || dir[1] > 20) && !start_flag) {
 					cv::putText(kinect.rgbImage, "look : " + to_string(sum_looking_time), cv::Point(200 * p + 50, 120), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 255), 1, CV_AA);
+				}
+			}
+			else {
+				if ((time_from_start - start)>0) {
+					cv::putText(kinect.rgbImage, "look : " + to_string(sum_looking_time + (time_from_start - start) / 1000.0), cv::Point(200 * p + 50, 120), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 255), 1, CV_AA);
+				}
+				else {
+					cv::putText(kinect.rgbImage, "look : " + to_string(sum_looking_time) , cv::Point(200 * p + 50, 120), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 255), 1, CV_AA);
+				
 				}
 			}
 			miss_flame = 0;
@@ -192,6 +202,11 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 		if (onSave && miss_flame >= 30) {
 			vw.release();
 			onSave = false;
+			if (start_flag == true) {
+				start_flag = false;
+				log = log + "looking_time : " + to_string((time_from_start - start) / 1000.0) + "\n";
+				sum_looking_time = sum_looking_time + ((time_from_start - start) / 1000.0);
+			}
 
 			ofstream outputfile(filename + "\\log.txt");
 			outputfile << log;
