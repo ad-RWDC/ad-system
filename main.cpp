@@ -29,11 +29,10 @@ string now() {
 	return string(s);
 }
 
-string decideMovie(video_number){
+string decideMovie(){
+	int video_number = rand() % (5);
 	string movie_tittle[] = {"narratage.mp4", "sensei.mp4", "doraemon.mp4", "starwars.mp4", "marvel.mp4" };
-	// rode movie file
-	MovieGraphHandle = LoadGraph("video\\" + movie_tittle[video_number]);
-	video_name = movie_tittle[video_number];
+	return "video\\" + movie_tittle[video_number];
 }
 
 int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -100,9 +99,8 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 				onSave = true;
 				cv::imwrite( filename + "\\image.jpg", kinect.rgbImage);
 
-				video_number = rand() % (5);
-
-				decideMovie(video_number);
+				// load movie file
+				MovieGraphHandle = LoadGraph(decideMovie().c_str());
 
 				log = filename + "\n" + video_name + "\n";
 
