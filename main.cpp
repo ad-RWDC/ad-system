@@ -30,8 +30,8 @@ string now() {
 }
 
 string decideMovie(){
-	int video_number = rand() % (5);
-	string movie_tittle[] = {"narratage.mp4", "sensei.mp4", "doraemon.mp4", "starwars.mp4", "marvel.mp4" };
+	string movie_tittle[] = {"narratage.mp4", "sensei.mp4", "doraemon.mp4", "starwars.mp4", "marvel.mp4"};
+	int video_number = rand() % GET_ARRAY_SIZE(movie_tittle);
 	return "video\\" + movie_tittle[video_number];
 }
 
