@@ -35,14 +35,14 @@ string decideMovie(){
 	return "video\\" + movie_tittle[video_number];
 }
 
-int write2csv(){
+int write2csv(int ID, string movie_ID, string attention_time){
 	FILE *fp;
 	char str;
 
 	fp = fopen("result.csv","a");
 
 	while((str = fgetc(fp))!=EOF){
-		printf("%c",str);
+		fprintf(fp, "%d,%s,%s\n", ID, movie_ID, attention_time);
 	}
 
 	fclose(fp);
