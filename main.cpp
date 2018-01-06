@@ -131,7 +131,6 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 
 			if (!(dir[0] == 0.0 && dir[1] == 0.0 && dir[2] == 0.0)) {
 
-
 				if (dir[1] >= -20 && dir[1] <= 20 && !start_flag) {
 					start = clock();
 					start_flag = true;
