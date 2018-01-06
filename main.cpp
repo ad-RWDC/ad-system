@@ -53,6 +53,12 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 	int MovieGraphHandle;
 	int video_number = 0;
 	std::vector<string> human_id;
+	std::vector<clock_t> human_start_time;
+	std::vector<clock_t> human_end_time;
+	std::vector<double> human_total_time;
+	std::vector<bool> human_start_flag;
+	std::vector<int> human_miss_flame;
+
 
 
 	//ChangeWindowMode(TRUE);
@@ -88,16 +94,16 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 			}
 		}
 		kinect.setFace();
-		for (int p = 0; p < kinect.faceDirection.size(); p++) {
+		for (int p = 0; p < kinect.skeletonTrackingId.size(); p++) {
 			if (!onSave) {
 				DeleteGraph(MovieGraphHandle);
 				filename = "D:\log\\" + now();
 				_mkdir(filename.c_str());
-				vw = cv::VideoWriter( filename + "\\video.avi", CV_FOURCC_MACRO('X', 'V', 'I', 'D'), 20.0, sz);
+				vw = cv::VideoWriter(filename + "\\video.avi", CV_FOURCC_MACRO('X', 'V', 'I', 'D'), 20.0, sz);
 
 				if (!vw.isOpened()) throw runtime_error("cannot create video file");
 				onSave = true;
-				cv::imwrite( filename + "\\image.jpg", kinect.rgbImage);
+				cv::imwrite(filename + "\\image.jpg", kinect.rgbImage);
 
 				// load movie file
 				MovieGraphHandle = LoadGraph(decideMovie().c_str());
@@ -109,83 +115,96 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 				start = clock();
 				time_from_start = clock();
 			}
-
-			cv::Vec3f dir = kinect.faceDirection[p];
-			cv::putText(kinect.rgbImage, "pitch : " + to_string(dir[0]), cv::Point(200 * p + 50, 30), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 0), 1, CV_AA);
-			cv::putText(kinect.rgbImage, "yaw : " + to_string(dir[1]), cv::Point(200 * p + 50, 60), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 0), 1, CV_AA);
-			cv::putText(kinect.rgbImage, "roll : " + to_string(dir[2]), cv::Point(200 * p + 50, 90), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 0), 1, CV_AA);
-
-			if (!(dir[0] == 0.0 && dir[1] == 0.0 && dir[2] == 0.0)) {
-
-
-				if (dir[1] >= -20 && dir[1] <= 20 && !start_flag) {
-					start = clock();
-					start_flag = true;
-				}
-
-				if (dir[1] >= -20 && dir[1] <= 20 && start_flag) {
-					time_from_start = clock();
-					cv::putText(kinect.rgbImage, "look : " + to_string(sum_looking_time + (time_from_start - start) / 1000.0), cv::Point(200 * p + 50, 120), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 255), 1, CV_AA);
-				}
-
-				if ((dir[1] < -20 || dir[1] > 20) && start_flag) {
-					start_flag = false;
-					//log = log + to_string(kinect.skeletonTrackingId[0]) + "looking_time : " + to_string((time_from_start - start) / 1000.0) + "\n";
-					log = log + "looking_time : " + to_string((time_from_start - start) / 1000.0) + "\n";
-					sum_looking_time = sum_looking_time + ((time_from_start - start) / 1000.0);
-				}
-
-				if ((dir[1] < -20 || dir[1] > 20) && !start_flag) {
-					cv::putText(kinect.rgbImage, "look : " + to_string(sum_looking_time), cv::Point(200 * p + 50, 120), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 255), 1, CV_AA);
-				}
+			vector< string >::iterator cIter = find(human_id.begin(), human_id.end(), kinect.skeletonTrackingId[p]);
+			if (cIter == human_id.end()) {
+				human_id.push_back(kinect.skeletonTrackingId[p]);
+				human_start_time.push_back(clock());
+				human_end_time.push_back(clock());
+				human_total_time.push_back(0.0);
+				human_start_flag.push_back(false);
+				human_miss_flame.push_back(0);
 			}
-			else {
-				if ((time_from_start - start)>0) {
-					cv::putText(kinect.rgbImage, "look : " + to_string(sum_looking_time + (time_from_start - start) / 1000.0), cv::Point(200 * p + 50, 120), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 255), 1, CV_AA);
+		}
+		for (int p = 0; p < human_id.size(); p++) {
+			int ckecker = 0;
+			for (int i = 0; i < kinect.skeletonTrackingId.size(); i++) {
+				if (human_id[p] == kinect.skeletonTrackingId[i]) {
+					cv::Vec3f dir = kinect.faceDirection[i];
+					//cv::putText(kinect.rgbImage, "pitch : " + to_string(dir[0]), cv::Point(200 * p + 50, 30), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 0), 1, CV_AA);
+					//cv::putText(kinect.rgbImage, "yaw : " + to_string(dir[1]), cv::Point(200 * p + 50, 60), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 0), 1, CV_AA);
+					//cv::putText(kinect.rgbImage, "roll : " + to_string(dir[2]), cv::Point(200 * p + 50, 90), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 0), 1, CV_AA);
+
+					if (!(dir[0] == 0.0 && dir[1] == 0.0 && dir[2] == 0.0)) {
+
+
+						if (dir[1] >= -20 && dir[1] <= 20 && !human_start_flag[p]) {
+							human_start_time[p] = clock();
+							human_start_flag[p] = true;
+							human_end_time[p] = clock();
+						}
+
+						if (dir[1] >= -20 && dir[1] <= 20 && human_start_flag[p]) {
+							human_end_time[p] = clock();
+							//cv::putText(kinect.rgbImage, "look : " + to_string(sum_looking_time + (time_from_start - start) / 1000.0), cv::Point(200 * p + 50, 120), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 255), 1, CV_AA);
+						}
+
+						if ((dir[1] < -20 || dir[1] > 20) && human_start_flag[p]) {
+							human_start_flag[p] = false;
+							//log = log + to_string(kinect.skeletonTrackingId[0]) + "looking_time : " + to_string((time_from_start - start) / 1000.0) + "\n";
+							//log = log + "looking_time : " + to_string((time_from_start - start) / 1000.0) + "\n";
+							human_total_time[p] = human_total_time[p] + ((human_end_time[p] - human_start_time[p]) / 1000.0);
+						}
+
+						if ((dir[1] < -20 || dir[1] > 20) && !human_start_flag[p]) {
+							//cv::putText(kinect.rgbImage, "look : " + to_string(sum_looking_time), cv::Point(200 * p + 50, 120), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 255), 1, CV_AA);
+						}
+					}
+					human_miss_flame[p] = 0;
+					ckecker = 1;
 				}
-				else {
-					cv::putText(kinect.rgbImage, "look : " + to_string(sum_looking_time) , cv::Point(200 * p + 50, 120), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 255), 1, CV_AA);
-				
-				}
-			}
-			miss_flame = 0;
+
+		}
+		if(checker==0) {
+			human_miss_flame[p] = human_miss_flame[p] + 1;
 		}
 
-		if (kinect.faceDirection.size() == 0) {
-			miss_flame = miss_flame + 1;
-		}
-
-		if (onSave && miss_flame >= 30) {
-			vw.release();
-			onSave = false;
-			if (start_flag == true) {
-				start_flag = false;
-				log = log + "looking_time : " + to_string((time_from_start - start) / 1000.0) + "\n";
-				sum_looking_time = sum_looking_time + ((time_from_start - start) / 1000.0);
+		if (human_miss_flame[p] >= 30) {
+			if (human_start_flag[p] == true) {
+				//human_start_flag[p] = false;
+				//log = log + "looking_time : " + to_string((time_from_start - start) / 1000.0) + "\n";
+				human_total_time[p] = human_total_time[p] + ((human_end_time[p] - human_start_time[p]) / 1000.0);
 			}
 
-			ofstream outputfile(filename + "\\log.txt");
-			outputfile << log;
-			outputfile << "looking_time_sum : " + to_string(sum_looking_time);
+			human_id.erase(human_id.begin() + p);
+			human_start_time.erase(human_start_time.begin() + p);
+			human_end_time.erase(human_end_time.begin() + p);
+			human_total_time.erase(human_total_time.begin() + p);
+			human_start_flag.erase(human_start_flag.begin() + p);
+			human_miss_flame.erase(human_miss_flame.begin() + p);
 
-			if (sum_looking_time == 0.0) {
-				DeleteFile(filename.c_str());
-			}
-
-			outputfile.close();
-			cv::destroyAllWindows();
-			// Delete the graphic handle of the included movie file
-			DeleteGraph(MovieGraphHandle);
-
-			// rode movie file
-			MovieGraphHandle = LoadGraph("video\\black.mp4");
-
-			// play movie
-			PlayMovieToGraph(MovieGraphHandle);
-
-			sum_looking_time = 0.0;
-			miss_flame = 0;
 		}
+
+
+
+		if (onSave && human_id.size() == 0) {
+				vw.release();
+				onSave = false;
+
+				ofstream outputfile(filename + "\\log.txt");
+				outputfile << log;
+				outputfile << "looking_time_sum : " + to_string(sum_looking_time);
+				outputfile.close();
+				cv::destroyAllWindows();
+				// Delete the graphic handle of the included movie file
+				DeleteGraph(MovieGraphHandle);
+
+				// rode movie file
+				MovieGraphHandle = LoadGraph("video\\black.mp4");
+
+				// play movie
+				PlayMovieToGraph(MovieGraphHandle);
+			}
+		
 
 		// change movie size
 		DrawExtendGraph(0, 0, 640, 480, MovieGraphHandle, FALSE);
