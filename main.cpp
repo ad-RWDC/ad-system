@@ -28,8 +28,12 @@ string now() {
 	return string(s);
 }
 
-
-
+string decideMovie(video_number){
+	string movie_tittle[] = {"narratage.mp4", "sensei.mp4", "doraemon.mp4", "starwars.mp4", "marvel.mp4" };
+	// ムービーファイルをロードします。
+	MovieGraphHandle = LoadGraph("video\\" + movie_tittle[video_number]);
+	video_name = movie_tittle[video_number];
+}
 
 int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -61,12 +65,9 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 	// ムービーファイルをロードします。
 	MovieGraphHandle = LoadGraph("video\\narratage.mp4");
 
-
 	// ムービーを再生状態にします
 	PlayMovieToGraph(MovieGraphHandle);
-
 	DrawExtendGraph(0, 0, 640, 480, MovieGraphHandle, FALSE);
-
 	DeleteGraph(MovieGraphHandle);
 
 	// ムービーファイルをロードします。
@@ -75,9 +76,7 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 	// ムービーを再生状態にします
 	PlayMovieToGraph(MovieGraphHandle);
 
-
 	while (CheckHitKey(KEY_INPUT_ESCAPE) == 0) {
-
 
 		if (onSave) {
 			cv::resize(kinect.rgbImage, img, sz, 0, 0);
@@ -117,34 +116,7 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 
 				video_number = rand() % (5);
 
-				if (video_number == 0) {
-					// ムービーファイルをロードします。
-					MovieGraphHandle = LoadGraph("video\\narratage.mp4");
-					video_name = "0 narratage.mp4";
-				}
-
-				else if (video_number == 1) {
-					// ムービーファイルをロードします。
-					MovieGraphHandle = LoadGraph("video\\sensei.mp4");
-					video_name = "1 sensei.mp4";
-				}
-
-				else if (video_number == 2) {
-					// ムービーファイルをロードします。
-					MovieGraphHandle = LoadGraph("video\\doraemon.mp4");
-					video_name = "2 doraemon.mp4";
-				}
-				else if (video_number == 3) {
-					// ムービーファイルをロードします。
-					MovieGraphHandle = LoadGraph("video\\starwars.mp4");
-					video_name = "3 starwars.mp4";
-				}
-
-				else if (video_number == 4) {
-					// ムービーファイルをロードします。
-					MovieGraphHandle = LoadGraph("video\\marvel.mp4");
-					video_name = "4 marvel.mp4";
-				}
+				decideMovie(video_number);
 
 				log = filename + "\n" + video_name + "\n";
 
