@@ -35,6 +35,20 @@ string decideMovie(){
 	return "video\\" + movie_tittle[video_number];
 }
 
+int write2csv(){
+	FILE *fp;
+	char str;
+
+	fp = fopen("result.csv","a");
+
+	while((str = fgetc(fp))!=EOF){
+		printf("%c",str);
+	}
+
+	fclose(fp);
+	return 0;
+}
+
 int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	NtKinect kinect;
