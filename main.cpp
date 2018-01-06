@@ -30,19 +30,19 @@ string now() {
 }
 
 string decideMovie(){
-	string movie_tittle[] = {"narratage.mp4", "sensei.mp4", "doraemon.mp4", "starwars.mp4", "marvel.mp4"};
-	int video_number = rand() % GET_ARRAY_SIZE(movie_tittle);
+	std::vector<string> movie_tittle = {"narratage.mp4", "sensei.mp4", "doraemon.mp4", "starwars.mp4", "marvel.mp4"};
+	int video_number = rand() % movie_tittle.size();
 	return "video\\" + movie_tittle[video_number];
 }
 
-int write2csv(int ID, string movie_ID, string attention_time){
+int write2csv(string ID, string movie_ID, double attention_time){
 	FILE *fp;
 	char str;
 
-	fp = fopen("result.csv","a");
+	fp = fopen("D:\log\result.csv","a");
 
 	while((str = fgetc(fp))!=EOF){
-		fprintf(fp, "%d,%s,%s\n", ID, movie_ID, attention_time);
+		fprintf(fp, "%c,%c,%f\n", ID, movie_ID, attention_time);
 	}
 
 	fclose(fp);
@@ -55,6 +55,7 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 	clock_t start, time_from_start;
 	cv::VideoWriter vw;
 	int scale = 1;
+	bool ckeck_frag = true;
 	cv::Size sz(1920 / scale, 1080 / scale);
 	bool onSave = false;
 	cv::Mat img;
@@ -64,6 +65,7 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 	string filename;
 	string video_name;
 	string log;
+	string movie_name;
 	int MovieGraphHandle;
 	int video_number = 0;
 	std::vector<string> human_id;
@@ -72,6 +74,7 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 	std::vector<double> human_total_time;
 	std::vector<bool> human_start_flag;
 	std::vector<int> human_miss_flame;
+	std::vector<string> human_movie_name;
 
 
 
@@ -117,31 +120,31 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 
 				if (!vw.isOpened()) throw runtime_error("cannot create video file");
 				onSave = true;
-				cv::imwrite(filename + "\\image.jpg", kinect.rgbImage);
 
 				// load movie file
-				MovieGraphHandle = LoadGraph(decideMovie().c_str());
+				movie_name = decideMovie();
+				MovieGraphHandle = LoadGraph(movie_name.c_str());
 
-				log = filename + "\n" + video_name + "\n";
+				//log = filename + "\n" + video_name + "\n";
 
 				// play movie
 				PlayMovieToGraph(MovieGraphHandle);
-				start = clock();
-				time_from_start = clock();
 			}
 
 			vector< string >::iterator cIter = find(human_id.begin(), human_id.end(), kinect.skeletonTrackingId[p]);
 			if (cIter == human_id.end()) {
-				human_id.push_back(kinect.skeletonTrackingId[p]);
+				cv::imwrite(filename + "\\image.jpg", kinect.rgbImage);
+				human_id.push_back(to_string(kinect.skeletonTrackingId[p]));
 				human_start_time.push_back(clock());
 				human_end_time.push_back(clock());
 				human_total_time.push_back(0.0);
 				human_start_flag.push_back(false);
 				human_miss_flame.push_back(0);
+				human_movie_name.push_back(movie_name);
 			}
 		}
 		for (int p = 0; p < human_id.size(); p++) {
-			int ckecker = 0;
+			ckeck_frag = true;
 			for (int i = 0; i < kinect.skeletonTrackingId.size(); i++) {
 				if (human_id[p] == kinect.skeletonTrackingId[i]) {
 					cv::Vec3f dir = kinect.faceDirection[i];
@@ -175,11 +178,11 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 						}
 					}
 					human_miss_flame[p] = 0;
-					ckecker = 1;
+					ckeck_frag = false;
 				}
 
 		}
-		if(checker==0) {
+		if(check_frag) {
 			human_miss_flame[p] = human_miss_flame[p] + 1;
 		}
 
@@ -190,12 +193,15 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 				human_total_time[p] = human_total_time[p] + ((human_end_time[p] - human_start_time[p]) / 1000.0);
 			}
 
+			write2csv(human_id[p], human_movie_name[p], human_total_time[p]);
+
 			human_id.erase(human_id.begin() + p);
 			human_start_time.erase(human_start_time.begin() + p);
 			human_end_time.erase(human_end_time.begin() + p);
 			human_total_time.erase(human_total_time.begin() + p);
 			human_start_flag.erase(human_start_flag.begin() + p);
 			human_miss_flame.erase(human_miss_flame.begin() + p);
+			human_movie_name.erase(human_movie_name.begin() + p);
 
 		}
 
@@ -205,10 +211,6 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 				vw.release();
 				onSave = false;
 
-				ofstream outputfile(filename + "\\log.txt");
-				outputfile << log;
-				outputfile << "looking_time_sum : " + to_string(sum_looking_time);
-				outputfile.close();
 				cv::destroyAllWindows();
 				// Delete the graphic handle of the included movie file
 				DeleteGraph(MovieGraphHandle);
