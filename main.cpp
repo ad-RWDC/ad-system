@@ -30,9 +30,23 @@ string now() {
 }
 
 string decideMovie(){
-	int video_number = rand() % (5);
-	string movie_tittle[] = {"narratage.mp4", "sensei.mp4", "doraemon.mp4", "starwars.mp4", "marvel.mp4" };
+	string movie_tittle[] = {"narratage.mp4", "sensei.mp4", "doraemon.mp4", "starwars.mp4", "marvel.mp4"};
+	int video_number = rand() % GET_ARRAY_SIZE(movie_tittle);
 	return "video\\" + movie_tittle[video_number];
+}
+
+int write2csv(int ID, string movie_ID, string attention_time){
+	FILE *fp;
+	char str;
+
+	fp = fopen("result.csv","a");
+
+	while((str = fgetc(fp))!=EOF){
+		fprintf(fp, "%d,%s,%s\n", ID, movie_ID, attention_time);
+	}
+
+	fclose(fp);
+	return 0;
 }
 
 int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
