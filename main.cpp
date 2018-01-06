@@ -29,8 +29,12 @@ string now() {
 	return string(s);
 }
 
-
-
+string decideMovie(video_number){
+	string movie_tittle[] = {"narratage.mp4", "sensei.mp4", "doraemon.mp4", "starwars.mp4", "marvel.mp4" };
+	// rode movie file
+	MovieGraphHandle = LoadGraph("video\\" + movie_tittle[video_number]);
+	video_name = movie_tittle[video_number];
+}
 
 int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -53,23 +57,27 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 
 
 	//ChangeWindowMode(TRUE);
-	if (DxLib_Init() == -1)    // ＤＸライブラリ初期化処理
+
+	if (DxLib_Init() == -1)
 	{
-		return -1;    // エラーが発生したら終了
+		return -1;    // finish if ellor cause
 	}
 	MovieGraphHandle = LoadGraph("video\\narratage.mp4");
+
+
+	// rode movie file
+	MovieGraphHandle = LoadGraph("video\\narratage.mp4");
+
+	// play movie
 	PlayMovieToGraph(MovieGraphHandle);
-
 	DrawExtendGraph(0, 0, 640, 480, MovieGraphHandle, FALSE);
-
 	DeleteGraph(MovieGraphHandle);
 
-	// ムービーファイルをロードします。
+	// upload movie file
 	MovieGraphHandle = LoadGraph("video\\black.mp4");
 
-	// ムービーを再生状態にします
+	// play movie
 	PlayMovieToGraph(MovieGraphHandle);
-
 
 
 	while (CheckHitKey(KEY_INPUT_ESCAPE) == 0) {
@@ -102,38 +110,11 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 
 				video_number = rand() % (5);
 
-				if (video_number == 0) {
-					// ムービーファイルをロードします。
-					MovieGraphHandle = LoadGraph("video\\narratage.mp4");
-					video_name = "0 narratage.mp4";
-				}
-
-				else if (video_number == 1) {
-					// ムービーファイルをロードします。
-					MovieGraphHandle = LoadGraph("video\\sensei.mp4");
-					video_name = "1 sensei.mp4";
-				}
-
-				else if (video_number == 2) {
-					// ムービーファイルをロードします。
-					MovieGraphHandle = LoadGraph("video\\doraemon.mp4");
-					video_name = "2 doraemon.mp4";
-				}
-				else if (video_number == 3) {
-					// ムービーファイルをロードします。
-					MovieGraphHandle = LoadGraph("video\\starwars.mp4");
-					video_name = "3 starwars.mp4";
-				}
-
-				else if (video_number == 4) {
-					// ムービーファイルをロードします。
-					MovieGraphHandle = LoadGraph("video\\marvel.mp4");
-					video_name = "4 marvel.mp4";
-				}
+				decideMovie(video_number);
 
 				log = filename + "\n" + video_name + "\n";
 
-				// ムービーを再生状態にします
+				// play movie
 				PlayMovieToGraph(MovieGraphHandle);
 				start = clock();
 				time_from_start = clock();
@@ -203,27 +184,27 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 
 			outputfile.close();
 			cv::destroyAllWindows();
-			// 読み込んだムービーファイルのグラフィックハンドルの削除
+			// Delete the graphic handle of the included movie file
 			DeleteGraph(MovieGraphHandle);
 
-			// ムービーファイルをロードします。
+			// rode movie file
 			MovieGraphHandle = LoadGraph("video\\black.mp4");
 
-			// ムービーを再生状態にします
+			// play movie
 			PlayMovieToGraph(MovieGraphHandle);
 
 			sum_looking_time = 0.0;
 			miss_flame = 0;
 		}
 
-		// ムービー映像を画面いっぱいに描画します
+		// change movie size
 		DrawExtendGraph(0, 0, 640, 480, MovieGraphHandle, FALSE);
 		
 		//auto key = cv::waitKey(1);
 		//if (key == 'q') break;
 	}
 	cv::destroyAllWindows();
-	DxLib_End();        // ＤＸライブラリ使用の終了処理
+	DxLib_End(); 
 
-	return 0;        // ソフトの終了
+	return 0;
 }
