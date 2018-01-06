@@ -62,21 +62,13 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 	{
 		return -1;    // finish if ellor cause
 	}
+
+	//initial movie flame
 	MovieGraphHandle = LoadGraph("video\\narratage.mp4");
-
-
-	// rode movie file
-	MovieGraphHandle = LoadGraph("video\\narratage.mp4");
-
-	// play movie
 	PlayMovieToGraph(MovieGraphHandle);
 	DrawExtendGraph(0, 0, 640, 480, MovieGraphHandle, FALSE);
 	DeleteGraph(MovieGraphHandle);
-
-	// upload movie file
 	MovieGraphHandle = LoadGraph("video\\black.mp4");
-
-	// play movie
 	PlayMovieToGraph(MovieGraphHandle);
 
 
