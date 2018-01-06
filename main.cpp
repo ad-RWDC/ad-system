@@ -2,6 +2,7 @@
 #include <sstream>
 #include <direct.h>
 #include <fstream>
+#include <vector>
 
 #define USE_FACE
 #include "NtKinect.h"
@@ -48,21 +49,15 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 	string log;
 	int MovieGraphHandle;
 	int video_number = 0;
+	std::vector<string> human_id;
 
 
 	//ChangeWindowMode(TRUE);
-
 	if (DxLib_Init() == -1)    // ＤＸライブラリ初期化処理
 	{
 		return -1;    // エラーが発生したら終了
 	}
-
-
-	// ムービーファイルをロードします。
 	MovieGraphHandle = LoadGraph("video\\narratage.mp4");
-
-
-	// ムービーを再生状態にします
 	PlayMovieToGraph(MovieGraphHandle);
 
 	DrawExtendGraph(0, 0, 640, 480, MovieGraphHandle, FALSE);
@@ -76,9 +71,8 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 	PlayMovieToGraph(MovieGraphHandle);
 
 
+
 	while (CheckHitKey(KEY_INPUT_ESCAPE) == 0) {
-
-
 		if (onSave) {
 			cv::resize(kinect.rgbImage, img, sz, 0, 0);
 			cv::cvtColor(img, img, CV_BGRA2BGR);
@@ -92,18 +86,9 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 				if (joint.TrackingState == TrackingState_NotTracked) continue;
 				ColorSpacePoint cp;
 				kinect.coordinateMapper->MapCameraPointToColorSpace(joint.Position, &cp);
-				//cv::rectangle(kinect.rgbImage, cv::Rect((int)cp.X - 5, (int)cp.Y - 5, 10, 10), cv::Scalar(0, 0, 255), 2);
 			}
 		}
 		kinect.setFace();
-		for (cv::Rect r : kinect.faceRect) {
-			//cv::rectangle(kinect.rgbImage, r, cv::Scalar(255, 255, 0), 2);
-		}
-		for (vector<PointF> vf : kinect.facePoint) {
-			for (PointF p : vf) {
-				//cv::rectangle(kinect.rgbImage, cv::Rect((int)p.X - 3, (int)p.Y - 3, 6, 6), cv::Scalar(0, 255, 255), 2);
-			}
-		}
 		for (int p = 0; p < kinect.faceDirection.size(); p++) {
 			if (!onSave) {
 				DeleteGraph(MovieGraphHandle);
