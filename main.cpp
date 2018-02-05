@@ -35,15 +35,14 @@ string decideMovie(){
 	return "video\\" + movie_tittle[video_number];
 }
 
-int write2csv(string ID, string movie_ID, double attention_time){
+int write2csv(UINT64 ID, string movie_ID, double attention_time){
 	FILE *fp;
 	char str;
 
-	fp = fopen("D:\log\result.csv","a");
+	fp = fopen("E:\log\\result.csv","a");
 
-	while((str = fgetc(fp))!=EOF){
-		fprintf(fp, "%c,%c,%f\n", ID, movie_ID, attention_time);
-	}
+	fprintf(fp, "%d,%s,%f\n", ID, movie_ID.c_str(), attention_time);
+	
 
 	fclose(fp);
 	return 0;
@@ -52,10 +51,9 @@ int write2csv(string ID, string movie_ID, double attention_time){
 int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	NtKinect kinect;
-	clock_t start, time_from_start;
 	cv::VideoWriter vw;
 	int scale = 1;
-	bool ckeck_frag = true;
+	bool check_frag = true;
 	cv::Size sz(1920 / scale, 1080 / scale);
 	bool onSave = false;
 	cv::Mat img;
@@ -68,13 +66,14 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 	string movie_name;
 	int MovieGraphHandle;
 	int video_number = 0;
-	std::vector<string> human_id;
+	std::vector<UINT64> human_id;
 	std::vector<clock_t> human_start_time;
 	std::vector<clock_t> human_end_time;
 	std::vector<double> human_total_time;
 	std::vector<bool> human_start_flag;
 	std::vector<int> human_miss_flame;
 	std::vector<string> human_movie_name;
+	std::vector<string> human_image_pass;
 
 
 
@@ -90,6 +89,7 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 	PlayMovieToGraph(MovieGraphHandle);
 	DrawExtendGraph(0, 0, 640, 480, MovieGraphHandle, FALSE);
 	DeleteGraph(MovieGraphHandle);
+
 	MovieGraphHandle = LoadGraph("video\\black.mp4");
 	PlayMovieToGraph(MovieGraphHandle);
 
@@ -114,9 +114,9 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 		for (int p = 0; p < kinect.skeletonTrackingId.size(); p++) {
 			if (!onSave) {
 				DeleteGraph(MovieGraphHandle);
-				filename = "D:\log\\" + now();
-				_mkdir(filename.c_str());
-				vw = cv::VideoWriter(filename + "\\video.avi", CV_FOURCC_MACRO('X', 'V', 'I', 'D'), 20.0, sz);
+				filename = "E:\log\\" + now();
+				//_mkdir(filename.c_str());
+				vw = cv::VideoWriter("E:\log\\video\\" + now() + ".avi", CV_FOURCC_MACRO('X', 'V', 'I', 'D'), 20.0, sz);
 
 				if (!vw.isOpened()) throw runtime_error("cannot create video file");
 				onSave = true;
@@ -131,10 +131,12 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 				PlayMovieToGraph(MovieGraphHandle);
 			}
 
-			vector< string >::iterator cIter = find(human_id.begin(), human_id.end(), kinect.skeletonTrackingId[p]);
+			vector< UINT64 >::iterator cIter = find(human_id.begin(), human_id.end(), kinect.skeletonTrackingId[p]);
 			if (cIter == human_id.end()) {
-				cv::imwrite(filename + "\\image.jpg", kinect.rgbImage);
-				human_id.push_back(to_string(kinect.skeletonTrackingId[p]));
+				string image_pass = "E:\log\\image\\" + now() + ".jpg";
+				cv::imwrite(image_pass, kinect.rgbImage);
+				human_image_pass.push_back(image_pass);
+				human_id.push_back(kinect.skeletonTrackingId[p]);
 				human_start_time.push_back(clock());
 				human_end_time.push_back(clock());
 				human_total_time.push_back(0.0);
@@ -144,8 +146,8 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 			}
 		}
 		for (int p = 0; p < human_id.size(); p++) {
-			ckeck_frag = true;
-			for (int i = 0; i < kinect.skeletonTrackingId.size(); i++) {
+			check_frag = true;
+			for (int i = 0; i < kinect.faceDirection.size(); i++) {
 				if (human_id[p] == kinect.skeletonTrackingId[i]) {
 					cv::Vec3f dir = kinect.faceDirection[i];
 					//cv::putText(kinect.rgbImage, "pitch : " + to_string(dir[0]), cv::Point(200 * p + 50, 30), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 230, 0), 1, CV_AA);
@@ -178,36 +180,36 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 						}
 					}
 					human_miss_flame[p] = 0;
-					ckeck_frag = false;
+					check_frag = false;
 				}
 
-		}
-		if(check_frag) {
-			human_miss_flame[p] = human_miss_flame[p] + 1;
-		}
-
-		if (human_miss_flame[p] >= 30) {
-			if (human_start_flag[p] == true) {
-				//human_start_flag[p] = false;
-				//log = log + "looking_time : " + to_string((time_from_start - start) / 1000.0) + "\n";
-				human_total_time[p] = human_total_time[p] + ((human_end_time[p] - human_start_time[p]) / 1000.0);
+			}
+			if (check_frag) {
+				human_miss_flame[p] = human_miss_flame[p] + 1;
 			}
 
-			write2csv(human_id[p], human_movie_name[p], human_total_time[p]);
+			if (human_miss_flame[p] >= 30) {
+				if (human_start_flag[p] == true) {
+					//human_start_flag[p] = false;
+					//log = log + "looking_time : " + to_string((time_from_start - start) / 1000.0) + "\n";
+					human_total_time[p] = human_total_time[p] + ((human_end_time[p] - human_start_time[p]) / 1000.0);
+				}
 
-			human_id.erase(human_id.begin() + p);
-			human_start_time.erase(human_start_time.begin() + p);
-			human_end_time.erase(human_end_time.begin() + p);
-			human_total_time.erase(human_total_time.begin() + p);
-			human_start_flag.erase(human_start_flag.begin() + p);
-			human_miss_flame.erase(human_miss_flame.begin() + p);
-			human_movie_name.erase(human_movie_name.begin() + p);
+				write2csv(human_id[p], human_movie_name[p], human_total_time[p]);
 
-		}
+				human_id.erase(human_id.begin() + p);
+				human_start_time.erase(human_start_time.begin() + p);
+				human_end_time.erase(human_end_time.begin() + p);
+				human_total_time.erase(human_total_time.begin() + p);
+				human_start_flag.erase(human_start_flag.begin() + p);
+				human_miss_flame.erase(human_miss_flame.begin() + p);
+				human_movie_name.erase(human_movie_name.begin() + p);
+
+			}
 
 
 
-		if (onSave && human_id.size() == 0) {
+			if (onSave && human_id.size() == 0) {
 				vw.release();
 				onSave = false;
 
@@ -221,13 +223,15 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 				// play movie
 				PlayMovieToGraph(MovieGraphHandle);
 			}
-		
 
-		// change movie size
+
+			// change movie size
+
+			//auto key = cv::waitKey(1);
+			//if (key == 'q') break;
+		}
+
 		DrawExtendGraph(0, 0, 640, 480, MovieGraphHandle, FALSE);
-		
-		//auto key = cv::waitKey(1);
-		//if (key == 'q') break;
 	}
 	cv::destroyAllWindows();
 	DxLib_End(); 
